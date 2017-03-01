@@ -1,5 +1,8 @@
 # Data_Prefetching
 
+##Goal:
+Developing a data prefetching algorithm using the DPC2015 tool kit for a storage limit of 1kBytes.
+
 ##Contents
 
 This repository contains given material/examples, code written for the prefetcher, shell scripts written and used to collect data and data gathered.
