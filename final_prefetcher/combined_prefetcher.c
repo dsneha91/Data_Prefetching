@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "inc/prefetcher.h"
+#include "/home/cmpe202/Downloads/dpc2sim/dpc2sim/inc/prefetcher.h"
 
 
 // *********************************************************************************************
@@ -17,8 +17,8 @@
 
 #define MAXDISTANCE 6 // max distance pointer
 #define INTERVAL 512
-#define TQSIZE 128
-#define PFQSIZE 128
+#define TQSIZE 60
+#define PFQSIZE 60
 #define IP_MASK_8b (0x0ff)
 #define IP_MASK_16b (0x0ffff)
 #define IP_MASK_32b (0x0ffffffff)
@@ -451,7 +451,7 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 // ******************************* BEGINNING OF IP STRIDE **************************************
 //**********************************************************************************************
 
-#define IP_TRACKER_COUNT 1024
+#define IP_TRACKER_COUNT 60
 #define IP_PREFETCH_DEGREE 1
 #define IP_DISTANCE 2
 

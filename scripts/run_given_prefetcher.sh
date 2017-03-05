@@ -9,7 +9,7 @@
 INITIAL_FILE="../data/initial_results.csv"
 
 # THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
-TRACES="../../dpc2simOLD/traces/*.dpc"
+TRACES="../../dpc2sim/traces/*.dpc"
 TEST_PREFETCHER_LOCATION=$1
 echo $1
 
