@@ -11,7 +11,7 @@
 CONFIG_FILE="all_config.csv"
 
 # THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
-TRACES="../../dpc2simOLD/traces/*.dpc"
+TRACES="../../traces/*.dpc.gz"
 TEST_PREFETCHER_LOCATION=$1
 echo "working on prefetcher: "$1
 
@@ -56,7 +56,7 @@ while read currentLine;
     touch currentTrace1 
 
     # Pull trace file name from path 
-    traceName=$(basename $trace ".dpc")
+    traceName=$(basename $trace ".dpc.gz")
     echo "Working on $traceName ... "
     # add to trace, prefetcher labels temp file 
     echo -ne $traceName | sed -e "\$a,"  >> currentTrace1
@@ -64,23 +64,23 @@ while read currentLine;
 
     echo "Flag: NONE"
     # Each line: run executable, fetch last number, append, append to current file 
-    cat $trace | ./dpc2sim1 | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace1
+    zcat $trace | ./dpc2sim1 | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace1
 
     echo  "Flag: small_llc"
-    cat  $trace | ./dpc2sim1  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace1
+    zcat  $trace | ./dpc2sim1  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace1
 
     echo "Flag: low_bandwidth"
-    cat  $trace | ./dpc2sim1  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace1
+    zcat  $trace | ./dpc2sim1  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace1
 
     echo  "Flag: scramble_loads"
-    cat $trace | ./dpc2sim1  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace1
+    zcat $trace | ./dpc2sim1  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace1
 
     # Calculate the sum
     # Takes the currentTrace1 file, prints even lines (to get rid of commas)
     # removes top line (name of the trace)
     # sums up all of the numbers 
     # adds comma!
-    cat currentTrace1 | awk 'NR % 2' | tail -n +2  | awk '{s+=$1} END {print s}' | sed -e "\$a," >> currentTrace1
+    zcat currentTrace1 | awk 'NR % 2' | tail -n +2  | awk '{s+=$1} END {print s}' | sed -e "\$a," >> currentTrace1
 
 
     # Write the current settings to the csv file 

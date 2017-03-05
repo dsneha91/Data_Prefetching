@@ -1,14 +1,6 @@
-// Paper #8
-// Title: Prefetching on time and when it works
-// Authors:
-// Ibrahim Burak Karsli - bkarsli@ele.uri.edu - Department of Electrical, Computer and Biomedical Engineering - University of Rhode Island
-// Mustafa Cavus - mcavus@my.uri.edu - Department of Electrical, Computer and Biomedical Engineering - University of Rhode Island
-// Resit Sendag - sendag@ele.uri.edu - Department of Electrical, Computer and Biomedical Engineering - University of Rhode Island
-
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "/home/cmpe202/Downloads/dpc2sim/dpc2sim/inc/prefetcher.h"
+#include "/home/cmpe202/Downloads/dpc2sim/inc/prefetcher.h"
 
 
 // *********************************************************************************************
@@ -17,8 +9,8 @@
 
 #define MAXDISTANCE 6 // max distance pointer
 #define INTERVAL 512
-#define TQSIZE 60
-#define PFQSIZE 60
+#define TQSIZE 29
+#define PFQSIZE 29
 #define IP_MASK_8b (0x0ff)
 #define IP_MASK_16b (0x0ffff)
 #define IP_MASK_32b (0x0ffffffff)
@@ -136,20 +128,20 @@ void SEQT_ini(int low_bw){
 
 
 void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit){
-  
+
   static int suml2occ = 0;
   static int numl2occhigh = 0;
-  
+
   suml2occ +=  get_l2_mshr_occupancy(0);
-  
+
   if(get_l2_mshr_occupancy(0)>=15)
     numl2occhigh++;
-  
-  unsigned long long int cycle = get_current_cycle(0); 
+
+  unsigned long long int cycle = get_current_cycle(0);
   l2acc++;
   if(!cache_hit)
     l2miss++;
-  
+
   //search for l2acc in tq
   int m;
   for(m=0; m<TQSIZE; m++){
@@ -158,17 +150,17 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 
       if(!cache_hit)
 	tqmhits++;
-      
+
       break;
-      
+
     }
   }
-  
-  
+
+
   if((l2acc%INTERVAL)==0){
     //decide on distance
 
-    
+
     if(tqhits < 16){
       if(pfcut > 1){
 	dist_ptr = 0;
@@ -221,7 +213,7 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
       }
       else if((l2miss!=0) && (tqmhits !=0)){
 	if((l2miss/tqmhits < 2)){
-	  
+
 	  if(low2>=2){
 	    if(dist_ptr<MAXDISTANCE){
 	      dist_ptr++;
@@ -238,8 +230,8 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 	high = 0;
 	low = 0;
 	pfcut2 = 0;
-	
-	
+
+
 	if(dist_ptr == 0){
 	  if(pf_turn_on > 1){
 	    pf_turn_on = 0;
@@ -297,7 +289,7 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 
       }
 
-      int failedtest = ((testblks < 32) || (otherblks < 32));	
+      int failedtest = ((testblks < 32) || (otherblks < 32));
 
 
       if(!failedtest){
@@ -306,21 +298,21 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 	  distance = 0;
 	  if(testperiod > INTERVAL)
 	    testperiod = testperiod>>1;
-	  
+
 	  //update turning off counter
 	  if(cntoff < 3)
 	    cntoff++;
-	  
+
 	  cnton = 0;
-	  
+
 	}
 	else{
 	  if(testperiod < (32*INTERVAL))
 	    testperiod = testperiod*2;
-	  
+
 	  //update turning off counter
 	  cntoff = 0;
-	  
+
 	  if(cnton < 3)
 	    cnton++;
 
@@ -331,9 +323,9 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 	testperiod = INTERVAL;
       }
       nexttest += testperiod;
-      
+
     }
-    
+
     testing = 0;
     testblks_hits = 0;
     testblks = 0;
@@ -349,12 +341,12 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
     else
       nexttest += INTERVAL;
   }
-  
+
   int Istblk = 0;
 
   if(testing == 1){
 
-    
+
     //if keeps turning off prefetcher, increase the number of tblks
     /**/
     if(cntoff>=2)
@@ -376,14 +368,14 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
       if(cache_hit)
 	otherblks_hits++;
     }
-    
+
   }
 
 
   unsigned long long int pf_address;
 
   pf_address = ((addr>>6)+distance)<<6;
-  int samepage = (pf_address>>12) == (addr>>12);  
+  int samepage = (pf_address>>12) == (addr>>12);
 
   //if distance is 0 (nopref), put in the queue as if distance = 1
   if(distance == 0)
@@ -401,44 +393,44 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 
 
   int nopf = ((testing ==1) && (Istblk));
-  
-  
+
+
   if(!nopf){
 
     if(samepage && !inpfq(pf_address >> 6)){
-      
+
       if(distance != 0){
 	//todo: make occupancy limit check dynamic
-	
+
 	if(get_l2_mshr_occupancy(0) < l2_mshr_limit)
 	  {
 	    l2_prefetch_line(0, addr, pf_address, FILL_L2);
 	  }
 	else
 	  {
-	    l2_prefetch_line(0, addr, pf_address, FILL_LLC);	      
+	    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
 	  }
-        
+
 	//add prefetched addr to the prefetch queue
 	pfq->tail = (pfq->tail+1) % PFQSIZE;
 	pfq->ent[pfq->tail].addr = (pf_address >> 6);
-	
+
       }
-      
+
     }
-    
-    
+
+
   }
-  
-  
+
+
     //add potential prefetch addr to the test queue
   if(samepage && !intq(pf_address>> 6)){
     tq->tail = (tq->tail+1) % TQSIZE;
     tq->ent[tq->tail].addr = (pf_address >> 6);
   }
-  
-  
-  
+
+
+
 } // end SEQT()
 
 
@@ -450,53 +442,98 @@ void SEQT(unsigned long long int addr, unsigned long long int ip, int cache_hit)
 // *********************************************************************************************
 // ******************************* BEGINNING OF IP STRIDE **************************************
 //**********************************************************************************************
-
-#define IP_TRACKER_COUNT 60
-#define IP_PREFETCH_DEGREE 1
+#define IP_TRACKER_COUNT 29
+#define PREFETCH_DEGREE_LOW 1
 #define IP_DISTANCE 2
+#define PREFETCH_DEGREE 4
+#define PREFETCH_DEGREE_HIGH 8
+#define THRESHOLD 30
+#define STREAM_DEPTH 2
+#define COMMON_COUNT 70
+#define UNCOMMON 20
 
 typedef struct ip_tracker
 {
   // the IP we're tracking
-  unsigned int ip;//32 bits
+  unsigned long long int ip;
 
   // the last address accessed by this IP
-  unsigned short last_addr;//16 bits
+  // this can be 58 bits since the bottom 6 bits are unused because of the block offset
+  unsigned long long int last_addr;
+
   // the stride between the last two addresses accessed by this IP
-  short last_stride;//8 bits
+  // this will be 6 bits since the bottom 6 bits are unused because of the block offset
+  // and the top 20 bits are unneccessary since we don't prefetch across pages
+  long int last_stride;
+
+  //stream is never larger than 5 bits (-8 to 8)
+  long int stream;
 
   // use LRU to evict old IP trackers
-  unsigned long long int lru_cycle;
+  //this can be a 6 bit number since there are only 128 entries
+  unsigned long int lru_cycle;
+
+  // the number of times this instruction has missed
+  unsigned long int miss;
+
+  // the number of times this instruction has been called
+  unsigned long int cycle_num;
 } ip_tracker_t;
 
 ip_tracker_t trackers[IP_TRACKER_COUNT];
 
+// this struct keeps track of the miss rate of common instructions only
+// this struct is not strictly necessary but helps with run time
+typedef struct common_counter {
+    unsigned long int miss;
+    unsigned long int cycle_num;
+} common_counter_t;
+
+common_counter_t MPC[COMMON_COUNT];
 
 void IP_STRIDE_ini() {
+  
+  printf("IP-based Stride Prefetcher\n");
+  // you can inspect these knob values from your code to see which configuration you're runnig in
+  printf("Knobs visible from prefetcher: %d %d %d\n", knob_scramble_loads, knob_small_llc, knob_low_bandwidth);
+
+  //make sure to initialize all variables within struct to 0
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
-      trackers[i].ip = 0;
-      trackers[i].last_addr = 0;
-      trackers[i].last_stride = 0;
-      trackers[i].lru_cycle = 0;
+        trackers[i].ip = 0;
+        trackers[i].last_addr = 0;
+        trackers[i].last_stride = 0;
+        trackers[i].lru_cycle = 0;
+        trackers[i].stream = 0;
+        trackers[i].miss = 0;       
+        trackers[i].cycle_num = 0;
+        if(i < COMMON_COUNT) {
+            MPC[i].miss = 0;
+            MPC[i].cycle_num = 0;
+        }
     }
 }
 
 void IP_STRIDE(unsigned long long int addr, unsigned long long int ip, int cache_hit) {
   // check for a tracker hit
-  int tracker_index = -1;
-  unsigned long long int addr_blk = addr >> 6;
+  
+  // uncomment this line to see all the information available to make prefetch decisions
+  //printf("(%lld 0x%llx 0x%llx %d %d %d) ", get_current_cycle(0), addr, ip, cache_hit, get_l2_read_queue_occupancy(0), get_l2_mshr_occupancy(0));
 
+  // check for a tracker hit
+  int tracker_index = -1;
+
+  //see if currently called instruction is already being tracked
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
-      if(trackers[i].ip == (ip & IP_MASK_32b))
-	{
-	  trackers[i].lru_cycle = get_current_cycle(0);
-	  tracker_index = i;
-	  break;
-	}
+      if(trackers[i].ip == ip)
+      {
+        trackers[i].lru_cycle = get_current_cycle(0);
+        tracker_index = i;
+        break;
+      }
     }
 
   if(tracker_index == -1)
@@ -505,37 +542,117 @@ void IP_STRIDE(unsigned long long int addr, unsigned long long int ip, int cache
       int lru_index=0;
       unsigned long long int lru_cycle = trackers[lru_index].lru_cycle;
       int i;
+      // evict least recently used instruction
       for(i=0; i<IP_TRACKER_COUNT; i++)
-	{
-	  if(trackers[i].lru_cycle < lru_cycle)
-	    {
-	      lru_index = i;
-	      lru_cycle = trackers[lru_index].lru_cycle;
-	    }
-	}
+        {
+          if(trackers[i].lru_cycle < lru_cycle)
+            {
+              lru_index = i;
+              lru_cycle = trackers[lru_index].lru_cycle;
+            }
+        }
 
       tracker_index = lru_index;
 
       // reset the old tracker
-      trackers[tracker_index].ip = ip & IP_MASK_32b;
-      trackers[tracker_index].last_addr = addr_blk & IP_MASK_16b;
+      trackers[tracker_index].ip = ip;
+      trackers[tracker_index].last_addr = addr;
       trackers[tracker_index].last_stride = 0;
       trackers[tracker_index].lru_cycle = get_current_cycle(0);
+      trackers[tracker_index].stream = 0;
+        trackers[tracker_index].miss = 0;
+        trackers[tracker_index].cycle_num = 0;
 
       return;
     }
 
-  // calculate the stride between the current address and the last address
-  // this bit appears overly complicated because we're calculating
-  // differences between unsigned address variables
-  short stride = 0;
-  if((addr_blk & IP_MASK_16b) > trackers[tracker_index].last_addr)
+    //increment cycles and misses if necessary
+    trackers[tracker_index].miss += (1-cache_hit);
+    trackers[tracker_index].cycle_num += 1;
+
+    // temporary variables for bubble sort
+    int temp, temp2;
+
+    // bubble sort by cycles then keep top 50 elements
+    for(temp = 0; temp<IP_TRACKER_COUNT; temp++) {
+    	for(temp2 = 0; temp2<(IP_TRACKER_COUNT-temp-1); temp2++) {
+            if(trackers[temp2].cycle_num > trackers[temp2 + 1].cycle_num) {
+                ip_tracker_t temp_struct = trackers[temp2];
+    			trackers[temp2] = trackers[temp2+1];
+    			trackers[temp2+1] = temp_struct;
+
+    			//sorting will mess up tracker_index, have to keep it updated with current position
+    			if(temp2 == tracker_index){
+    				tracker_index = temp2+1;
+    			} else if((temp2+1) == tracker_index) {
+    				tracker_index = temp2;
+    			}
+            }
+        }
+    }
+
+    //put 50 most common in MPC array
+    for(temp = UNCOMMON; temp<COMMON_COUNT; temp++) {
+        MPC[temp].miss = trackers[IP_TRACKER_COUNT-COMMON_COUNT+temp].miss;
+        MPC[temp].cycle_num = trackers[IP_TRACKER_COUNT-COMMON_COUNT+temp].cycle_num;
+    }
+
+    //put 20 from the less common in (evenly spaced)
+    for(temp = 0; temp<UNCOMMON; temp++) {
+        MPC[temp].miss = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].miss;
+        MPC[temp].cycle_num = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].cycle_num;
+    }
+
+    //the least common element in the MPC array
+    long int least_common_common = MPC[UNCOMMON].cycle_num;
+
+    //sort MPC array by MPC
+    for(temp = 0; temp<COMMON_COUNT; temp++) {
+    	for(temp2 = 0; temp2<(COMMON_COUNT-temp); temp2++) {
+    		if( ((float)MPC[temp2].miss/(float)MPC[temp2].cycle_num) > ((float)MPC[temp2+1].miss/(float)MPC[temp2+1].cycle_num)) {
+    			common_counter_t temp_struct = MPC[temp2];
+    			MPC[temp2] = MPC[temp2+1];
+    			MPC[temp2+1] = temp_struct;
+    		}
+    	}
+    }
+
+
+    int percent = THRESHOLD;
+    int prefetch_low = PREFETCH_DEGREE_LOW;
+    int prefetch_standard = PREFETCH_DEGREE;
+    int prefetch_high = PREFETCH_DEGREE_HIGH;
+
+    int prefetch_degree_used;
+
+    // convert the percentage threshold int an index
+    int thresh;
+    thresh = (COMMON_COUNT - 1)*((float)percent/100.0);
+
+    //rare instruction
+    if(trackers[tracker_index].cycle_num < least_common_common) {
+         //if doing well
+         if((float)trackers[tracker_index].miss/(float)trackers[tracker_index].cycle_num < (float)trackers[thresh].miss/(float)trackers[thresh].cycle_num)
+            prefetch_degree_used = prefetch_low;
+         else
+            prefetch_degree_used = prefetch_standard;
+    } else { //common instruction
+        //if doing well
+        if((float)trackers[tracker_index].miss/(float)trackers[tracker_index].cycle_num < (float)trackers[thresh].miss/(float)trackers[thresh].cycle_num)
+            prefetch_degree_used = prefetch_standard;
+         else
+            prefetch_degree_used = prefetch_high;
+    }
+
+  //calculate the stride
+  long long int stride = 0;
+  if(addr > trackers[tracker_index].last_addr)
     {
-      stride = ((addr_blk & IP_MASK_16b) - trackers[tracker_index].last_addr) & IP_MASK_8b;
+      stride = addr - trackers[tracker_index].last_addr;
     }
   else
     {
-      stride = (trackers[tracker_index].last_addr - (addr_blk & IP_MASK_16b)) & IP_MASK_8b;
+      stride = trackers[tracker_index].last_addr - addr;
       stride *= -1;
     }
 
@@ -549,41 +666,148 @@ void IP_STRIDE(unsigned long long int addr, unsigned long long int ip, int cache
   // stride more than once
   if(stride == trackers[tracker_index].last_stride)
     {
-      // do some prefetching
-      int i;
-      int tempdist = distance;
-      tempdist = tempdist / 2;
-      if (tempdist == 0) tempdist = 1;
-      for(i=tempdist; i<IP_PREFETCH_DEGREE+tempdist; i++)
-      //for(i=IP_DISTANCE; i<IP_PREFETCH_DEGREE+IP_DISTANCE; i++)
-	{
-	  unsigned long long int pf_address = (addr_blk + (stride*(i+1))) << 6;
+      int i, j;
+      int k = 0;
 
-	  // only issue a prefetch if the prefetch address is in the same 4 KB page 
-	  // as the current demand access address
-	  if((pf_address>>12) != (addr>>12))
-	    {
-	      break;
-	    }
+      // if there is a stream along with the stride	first stream up to 2 lines
+      // of data then stride, follow this up with more stream
+      if(trackers[tracker_index].stream > 0) {
+	      for(j=0, k=0; k<=prefetch_degree_used; j++) {
 
-	  // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
-	  if (!inpfq((pf_address >> 6))) {
-	  if(get_l2_mshr_occupancy(0) < l2_mshr_limit)
-	    {
-	      l2_prefetch_line(0, addr, pf_address, FILL_L2);
-	    }
-	  else
-	    {
-	      l2_prefetch_line(0, addr, pf_address, FILL_LLC);
-	    }
-	 	pfq->tail = (pfq->tail+1) % PFQSIZE;
-		pfq->ent[pfq->tail].addr = (pf_address >> 6);
-	  }
-	  
+			for(i=0; i<=trackers[tracker_index].stream; i++) {
+				k++;
+
+                //make sure we are not prefetching too much
+				if(k>prefetch_degree_used)
+				  break;
+
+                //make sure we are not streaming too much
+                if(i>STREAM_DEPTH)
+                  break;
+
+                //calculate the adress we want to prefetch
+                //j is the number of strides we have made
+                //i is the number of streams
+				unsigned long long int pf_address = addr + ((j+1)*stride);
+				pf_address = ((pf_address>>6) + i)<<6;
+
+				// only issue a prefetch if the prefetch address is in the same 4 KB page
+				// as the current demand access address
+				if((pf_address>>12) != (addr>>12))
+				  {
+				    break;
+				  }
+
+				// check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+				if(get_l2_mshr_occupancy(0) < 8) {
+				    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+				}else{
+				    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+				  }
+
+			  }
+			}
+	 } else { //stream <= 0
+	    for(j=0, k=0; k<=prefetch_degree_used; j++) {
+			for(i=0; i>=trackers[tracker_index].stream; i--)
+			  {
+				k++;
+				if(k>prefetch_degree_used)
+				  break;
+                if(i<-STREAM_DEPTH)
+                  break;
+				unsigned long long int pf_address = addr + ((j+1)*stride);
+				pf_address = ((pf_address>>6) + i)<<6;
+
+				// only issue a prefetch if the prefetch address is in the same 4 KB page
+				// as the current demand access address
+				if((pf_address>>12) != (addr>>12))
+				  {
+				    break;
+				  }
+
+				// check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+				if(get_l2_mshr_occupancy(0) < 8)
+				  {
+				    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+				  }
+				else
+				  {
+				    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+				  }
+
+			  }
+		}
 	}
+
+    // there is no stride pattern, so stream only
+  } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) + 1)) {
+        // dont want to override stride if streaming
+        stride = trackers[tracker_index].last_stride;
+
+        //if it was going in the other direction earlier, reset it
+        if(trackers[tracker_index].stream < 0)
+            trackers[tracker_index].stream = 0;
+        trackers[tracker_index].stream += 1;
+
+	    for(i=0; i<trackers[tracker_index].stream; i++) {
+		    unsigned long long int pf_address = addr + (i*64);
+
+                if(i>prefetch_degree_used)
+				  break;
+
+                // only issue a prefetch if the prefetch address is in the same 4 KB page
+                // as the current demand access address
+                if((pf_address>>12) != (addr>>12))
+                  {
+                    break;
+                  }
+
+                // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+                if(get_l2_mshr_occupancy(0) < 8)
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+                  }
+                else
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+                  }
+	    }
+    } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) - 1)) {
+        //dont want to override stride if streaming
+        stride = trackers[tracker_index].last_stride;
+
+        if(trackers[tracker_index].stream > 0)
+            trackers[tracker_index].stream = 0;
+        trackers[tracker_index].stream -= 1;
+
+        for(i=0; i>trackers[tracker_index].stream; i--) {
+		    unsigned long long int pf_address = addr + (i*64);
+
+                if((-1*i)>prefetch_degree_used)
+				  break;
+
+                // only issue a prefetch if the prefetch address is in the same 4 KB page
+                // as the current demand access address
+                if((pf_address>>12) != (addr>>12))
+                  {
+                    break;
+                  }
+
+                // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+                if(get_l2_mshr_occupancy(0) < 8)
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+                  }
+                else
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+                  }
+	    }
     }
 
-  trackers[tracker_index].last_addr = addr_blk & IP_MASK_16b;
+  //store relevant values
+  trackers[tracker_index].last_addr = addr;
   trackers[tracker_index].last_stride = stride;
 }
 
@@ -602,7 +826,7 @@ void l2_prefetcher_initialize(int cpu_num)
 void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned long long int ip, int cache_hit)
 {
   IP_STRIDE(addr, ip, cache_hit);
-  SEQT(addr, ip, cache_hit);  
+  SEQT(addr, ip, cache_hit);
 }
 
 void l2_cache_fill(int cpu_num, unsigned long long int addr, int set, int way, int prefetch, unsigned long long int evicted_addr)

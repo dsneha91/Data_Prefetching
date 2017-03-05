@@ -3,8 +3,8 @@
 # writes to csv file with timestamp as part of name 
 
 # Location of the Prefetchers and traces, must be user specified 
-PREFETCHERS="../dpc2sim/example_prefetchers/*.c"
-TRACES="../../dpc2simOLD/traces/*.dpc"
+PREFETCHERS="../final_prefetcher/*.c"
+TRACES="../traces/*.dpc.gz"
 
 # Remove old intermediate files, create new output file
 touch currentTrace
@@ -42,18 +42,18 @@ do
 
   echo "Flag: NONE"
   # Each line: run executable, fetch last number, append, append to current file 
-  cat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace
+  zcat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace
 
   echo  "Flag: small_llc"
-  cat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace
+  zcat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace
 
   echo "Flag: low_bandwidth"
-  cat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
+  zcat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
 
   echo  "Flag: scramble_loads"
   
 	# No comma on the last line
-	cat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}' >> currentTrace
+	zcat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}' >> currentTrace
 
 	# Clean up new lines in current trace run, append to end of file for the output file 
   # For each extra newline in currentTrace, increment NR%#?

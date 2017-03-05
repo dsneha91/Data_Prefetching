@@ -6,10 +6,10 @@
 
 
 # Location of the Prefetchers and traces 
-INITIAL_FILE="../data/initial_results.csv"
+INITIAL_FILE="/home/cmpe202/Downloads/dpc2sim/data/initial_results.csv"
 
 # THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
-TRACES="../../dpc2sim/traces/*.dpc"
+TRACES="home/cmpe202/Downloads/dpc2sim/traces/*.dpc"
 TEST_PREFETCHER_LOCATION=$1
 echo $1
 
@@ -21,13 +21,13 @@ rm currentTrace
 # Current file has date + prefetcher name, iso format 
 TEST_PREFETCHER_NAME=$(basename $TEST_PREFETCHER_LOCATION ".c")
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%S")
-NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
+NEWFILE="home/cmpe202/Downloads/dpc2sim/data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
 cp $INITIAL_FILE $NEWFILE
 
 # Start with a newline 
 printf "" >> $NEWFILE
 
-gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
+gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION /home/cmpe202/Downloads/dpc2sim/lib/dpc2sim.a
 
 # Each prefetcher on each trace, with 4 flag options
 for trace in $TRACES
@@ -44,17 +44,17 @@ for trace in $TRACES
 
   echo "Flag: NONE"
   # Each line: run executable, fetch last number, append, append to current file 
-  cat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace
+  zcat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace
 
   echo  "Flag: small_llc"
-  cat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace
+  zcat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace
 
   echo "Flag: low_bandwidth"
-  cat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
+  zcat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
 
   echo  "Flag: scramble_loads"
   # No comma on the last line
-  cat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}' >> currentTrace
+  zcat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}' >> currentTrace
 
   # Clean up new lines in current trace run, append to end of file for the output file 
   # For each extra newline in currentTrace, increment NR%#?
