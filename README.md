@@ -1,17 +1,21 @@
 # Data_Prefetching
 
+##Goal:
+Developing a data prefetching algorithm using the DPC2015 tool kit for a storage limit of 1kBytes.
+
 ##Contents
 
-This repository contains given material/examples, code written for the prefetcher, shell scripts written and used to collect data, data gathered, and write ups.
+This repository contains given material/examples, code written for the prefetcher, shell scripts written and used to collect data and data gathered.
 
 |Directory |	Contents |
 |---|---|
 |data |	generated csv files from running prefetchers on traces, raw and processed data |
 |dpc2sim	| given infrastructure, previous prefetchers, and given traces, downloaded from here |
 |inc, lib|	copied from given code to help prefetcher compile|
-|prefetchers|	Final prefetcher|
+|final_prefetcher|	Final prefetcher|
 |shell scripts|	scripts used to run through initial prefetchers, best_offset prefetcher and my prefetcher |
 |traces	|traces generated|
+|papers| ideas from papers considered|
 
 
 
