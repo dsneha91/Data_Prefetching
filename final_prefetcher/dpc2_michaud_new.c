@@ -75,7 +75,7 @@ struct prefetch_throttle {
   int last_cycle;         // TIME_BITS = 12 bits
 } pt;                     // 4+5+8+13+12 = 42 bits
 
-// Total prefetcher state: 7 + 3072 + 2048 + 255 + 2581 + 42 = 4361 bits 
+// Total prefetcher state: 7 + 3072 + 2048 + 255 + 2581 + 42 = 8005 bits 
 
 
 

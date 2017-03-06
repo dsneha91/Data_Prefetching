@@ -9,8 +9,8 @@
 
 #define MAXDISTANCE 6 // max distance pointer
 #define INTERVAL 512
-#define TQSIZE 29
-#define PFQSIZE 29
+#define TQSIZE 30
+#define PFQSIZE 30
 #define IP_MASK_8b (0x0ff)
 #define IP_MASK_16b (0x0ffff)
 #define IP_MASK_32b (0x0ffffffff)
