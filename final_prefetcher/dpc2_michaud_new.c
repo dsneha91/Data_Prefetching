@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "/home/cmpe202/Downloads/dpc2sim/inc/prefetcher.h"
+#include "/home/cmpe202/Downloads/dpc2sim/dpc2sim/inc/prefetcher.h"
 
 // Submission ID: 3
 
@@ -42,7 +42,7 @@ int OFFSET[NOFFSETS] = {1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10,11,-
 
 int prefetch_offset;   // 7 bits (6-bit value + 1 sign bit)
 
-// Recent Requests (RR) table: 2 banks, 128 entries per bank, RRTAG bits per entry
+// Recent Requests (RR) table: 2 banks, 64 entries per bank, RRTAG bits per entry
 int recent_request[2][1<<RRINDEX]; // 2x128x12 = 3072 bits
 
 // 1 prefetch bit per L2 cache line : 256x8 = 2048 bits 
@@ -64,7 +64,7 @@ struct delay_queue {
   int valid[DELAYQSIZE];    // 1 bit 
   int tail;                 // log2 DELAYQSIZE = 4 bits
   int head;                 // log2 DELAYQSIZE = 4 bits
-} dq;                       // 83x(18+12+1)+4+4 = 2581 bits
+} dq;                       // 83x(18+12+1)+4+4 = 2581  bits
 
 
 struct prefetch_throttle {
@@ -75,7 +75,7 @@ struct prefetch_throttle {
   int last_cycle;         // TIME_BITS = 12 bits
 } pt;                     // 4+5+8+13+12 = 42 bits
 
-// Total prefetcher state: 7 + 3072 + 2048 + 255 + 2581 + 42 = 8005 bits 
+// Total prefetcher state: 7 + 3072 + 2048 + 255 + 2581 + 42 = 4361 bits 
 
 
 
@@ -397,12 +397,7 @@ int issue_prefetch(t_addr lineaddr, int offset)
 //######################################################################################
 //                               DPC2 INTERFACE
 //######################################################################################
-int l2_get_set(unsigned long long int addr){
 
-}
-int l2_get_way(int cpu_num, unsigned long long int addr, int set){
-
-}
 
 void l2_prefetcher_initialize(int cpu_num)
 {
