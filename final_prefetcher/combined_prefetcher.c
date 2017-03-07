@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include "/home/cmpe202/Downloads/dpc2sim/inc/prefetcher.h"
 
-
+/*Total prefetcher state:
+ Sequential prefetcher- 2*(30*32)+14 +160 = 2094 bits  [30 entries]
+ Pattern prefetcher - 203 * 29 = 5887 bits [29 entries]
+ Total : 2094 + 5887 = 7981 bits ~ 1Kbyte
+*/
 // *********************************************************************************************
 // ************************************* BEGINNING OF SEQ **************************************
 //**********************************************************************************************
